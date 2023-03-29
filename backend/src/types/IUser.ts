@@ -8,6 +8,7 @@ export interface IUser {
     name: string,
     id_number: string,
     phoneNumber: string,
-    email: string
+    email: string,
+    pin_number: string
 
 }

@@ -18,6 +18,10 @@ const UserSchema  = new Schema <IUser>({
     },
     email: {
         type: String
+    },
+    pin_number: {
+        type: String, 
+        required: true
     }
 
 })
