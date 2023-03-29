@@ -40,7 +40,7 @@ export const configureMiddleware = (app:Express)=>{
     )
 
     //enable CORS
-    app.use(cors())
+    //app.use(cors())
 
     //enable logger
     app.use(logger)

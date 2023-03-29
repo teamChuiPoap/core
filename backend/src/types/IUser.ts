@@ -1,6 +1,6 @@
 export interface IUserWallet {
     address: string,
-    privateKey: string,
+    mnemonic: string,
     ownerID: string
 }
 
@@ -8,7 +8,7 @@ export interface IUser {
     name: string,
     id_number: string,
     phoneNumber: string,
-    email: string,
-    pin_number: string
+    PIN: string,
+    wallet_id: string
 
 }

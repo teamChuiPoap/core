@@ -25,6 +25,7 @@
     "ts-node": "^10.9.1",
     "ts-node-dev": "^2.0.0",
     "typescript": "^5.0.2",
+    "ussd-builder": "^1.2.5",
     "ussd-router": "^0.1.6",
     "xss-clean": "^0.1.1"
   },

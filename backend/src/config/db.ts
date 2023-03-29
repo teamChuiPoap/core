@@ -11,8 +11,8 @@ export const connectDB = async () => {
             useNewUrlParser: true,
             useUnifiedTopology: true,
             keepAlive: true,
-            connectTimeoutMS: 60000,
-            socketTimeoutMS: 60000,
+            connectTimeoutMS: 600000,
+            socketTimeoutMS: 600000,
         }
         const db = await connect(MONGO_URI, options)
         console.log('Connected to MongoDb :) ✅✅✅')

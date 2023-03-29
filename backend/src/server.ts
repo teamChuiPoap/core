@@ -15,7 +15,8 @@ const ussdRoute  = router
 configureMiddleware(app)
 
 //setup routes
-app.use('/ussd', ussdRoute)
+app.use('/', ussdRoute)
+
 
 //setup routes
 

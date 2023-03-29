@@ -16,12 +16,13 @@ const UserSchema  = new Schema <IUser>({
         type: String,
         required: true
     },
-    email: {
-        type: String
-    },
-    pin_number: {
+   
+    PIN: {
         type: String, 
         required: true
+    },
+    wallet_id: {
+        type: String
     }
 
 })

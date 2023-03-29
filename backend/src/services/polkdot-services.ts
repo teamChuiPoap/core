@@ -39,7 +39,8 @@ export const createWallet = async ()  => {
 }
 
 //getBalance 
-export const getBalance  = async (address) => {
+/*
+export const getBalance  = async (address: string) => {
     console.log(`Generated wallet Done`);
     const wsProvider = new WsProvider('wss://westend-rpc.polkadot.io');
     const api = await ApiPromise.create({ provider: wsProvider });
@@ -49,7 +50,7 @@ export const getBalance  = async (address) => {
     console.log(`Balance: ${amount}`)
 }
 
-getBalance('5EA7QP5eD7TEhtBtMK4PtH4pcbxtJXcgj1HoE2oMuiVPqV4V')
+getBalance('5EA7QP5eD7TEhtBtMK4PtH4pcbxtJXcgj1HoE2oMuiVPqV4V') */
 
 //transfer
 export const transfer = async () => {

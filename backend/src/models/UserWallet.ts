@@ -7,7 +7,7 @@ const UserWalletSchema = new Schema<IUserWallet>({
         required: true,
         unique: true
     },
-    privateKey: {
+    mnemonic: {
         type: String,
         required: true,
         unique: true
