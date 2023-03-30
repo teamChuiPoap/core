@@ -19,4 +19,4 @@ const UserWalletSchema = new Schema<IUserWallet>({
     }
 })
 
-export const UserWallet = model('UserWallet', UserWalletSchema)
+export const Wallet = model('Wallet', UserWalletSchema)

@@ -9,6 +9,7 @@ export interface IUser {
     id_number: string,
     phoneNumber: string,
     PIN: string,
-    wallet_id: string
+    wallet_id: string,
+    chamas_joined: string[]
 
 }

@@ -23,7 +23,10 @@ const UserSchema  = new Schema <IUser>({
     },
     wallet_id: {
         type: String
-    }
+    },
+    chamas_joined: [
+        String
+    ] //chama names only
 
 })
 

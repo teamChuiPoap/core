@@ -1,4 +1,4 @@
-import { Schema } from "mongoose";
+import { Schema, model } from "mongoose";
 import { IChama } from "../types/IChama";
 
 
@@ -7,8 +7,12 @@ const ChamaSchema = new Schema <IChama> ({
         type: String,
         required: true
     },
-    members: [],    
+    members: [
+         String
+    ],    
     wallet_id: {
         type: String
     }
 }) 
+
+export const Chama = model('Chama',ChamaSchema)

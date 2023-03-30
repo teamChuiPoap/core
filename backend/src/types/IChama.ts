@@ -1,5 +1,5 @@
 export interface IChama {
     name: string,
-    members: [],
+    members: string[],
     wallet_id: string
 }
