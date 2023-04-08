@@ -1,7 +1,7 @@
 import UssdMenu from "ussd-builder";
 import { User } from "../models/User";
 import { Wallet } from "../models/Wallet";
-import { createWallet} from "./polkdot-services";
+import { createWallet, getBalance} from "./polkdot-services.js";
 import { Chama } from "../models/Chama";
 
 export const menu = new UssdMenu
@@ -36,11 +36,16 @@ menu.startState({
 
             let user = await User.findOne({phoneNumber: userPhoneNo}).select('chamas_joined')
 
+            let chamasArray: any = user?.chamas_joined
+
             console.log(user?.chamas_joined)
 
             let res = 'Enter name of chama from below list:'
-            user?.chamas_joined.forEach(element => res + `\n${element}`)
+           // user?.chamas_joined.forEach(element => res + `\n${element}`)
 
+            for(let i=0; i<chamasArray.length; i++){
+                res+=`\n${chamasArray[i]}`
+            }
             menu.con(res)
 
         },
@@ -54,10 +59,12 @@ menu.startState({
             let chama = await Chama.findOne({name:chamaName}).select('wallet_id'),
                 wallet_id = chama?.wallet_id
             
-            let wallet = await Wallet.findById({wallet_id}).select('address'),
-                wallet_address = JSON.stringify(wallet?.address)
+            let wallet = await Wallet.findOne({_id:wallet_id}).select('address'),
+                wallet_address = JSON.stringify(wallet?.address).replace(/[^a-zA-Z0-9 ]/g, '')
+
+                console.log('address for chama', wallet_address)
             
-            let balance = '4500'
+            let balance = await getBalance(wallet_address)
 
             menu.end(`wallet balance is ${balance}`)
             
@@ -91,9 +98,15 @@ menu.startState({
             let chama_members = [menu.args.phoneNumber]
 
             let user = await User.findOne({phoneNumber: userPhoneNo}).select('chamas_joined'),
-                user_chamas = user?.chamas_joined.push(chamaName)
+                user_chamas = user?.chamas_joined
 
-            user = await User.findOneAndUpdate({phoneNumber:userPhoneNo}, {chamas_joined: user_chamas})            
+                console.log(user_chamas)
+
+                user_chamas?.push(chama.name)
+
+                console.log('user chamas after addition', user_chamas)
+
+            user = await User.findOneAndUpdate({phoneNumber:userPhoneNo}, {chamas_joined: user_chamas},{new: true})            
 
             chama = await Chama.findOneAndUpdate({name: chamaName},{wallet_id:walletId, members:chama_members}, {new: true})
 
@@ -162,7 +175,9 @@ menu.startState({
 
             phoneNumber = menu.args.phoneNumber
 
-            let user:any = await User.create({name,id_number,phoneNumber,PIN })
+            let chamas_joined = ['']
+
+            let user:any = await User.create({name,id_number,phoneNumber,PIN,chamas_joined })
 
             let _wallet = await createWallet(),
                 address = _wallet.address,
