@@ -25,7 +25,7 @@ const httpServer = createServer(app)
 
 httpServer.listen(5000, ()=>{
     console.info(
-        `PENNY-FI V1 SERVER STARTED ON`,
+        `MAISHA V1 SERVER STARTED ON`,
         httpServer.address(),
         `PID ${process.pid} \n`
     )
