@@ -13,7 +13,10 @@ export const connectDB = async () => {
       connectTimeoutMS: 600000,
       socketTimeoutMS: 600000,
     };
-    const db = await connect("mongodb://localhost:27017", options);
+    const db = await connect(
+      "mongodb+srv://bethnjoroge985:A21jalnM5onhcXxy@cluster0.ds1lq.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0",
+      options
+    );
     console.log("Connected to MongoDb :) ✅✅✅");
     console.log(`- - -`.repeat(10));
     return db;

@@ -18,8 +18,7 @@ try {
           "\n3. Check Up Reminder" +
           "\n4. Nutritional Information" +
           "\n5. Fetal Development Information" +
-          "\n6. Log Emergency Alert" +
-          "\n7. Speak to a hospital near you"
+          "\n6. Log Emergency Alert"
       );
       console.log(menu.val);
     },
@@ -29,7 +28,7 @@ try {
       "3": "Check Up Reminder",
       "4": "Nutritional Information",
       "5": "Fetal Development Information",
-      "6": "Emergency Alert",
+      "6": "Log Emergency Alert",
     },
   });
 
