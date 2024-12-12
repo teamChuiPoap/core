@@ -9,4 +9,4 @@ const alertSchema = new Schema({
   },
 });
 
-export const Alert = model("Alert", alertSchema);
+export const AlertUnreg = model("AlertUnreg", alertSchema);

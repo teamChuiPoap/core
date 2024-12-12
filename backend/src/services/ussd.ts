@@ -1,6 +1,6 @@
 import UssdMenu from "ussd-builder";
 import { User } from "../models/User";
-import { Alert } from "../models/alertMessage";
+import { AlertUnreg } from "../models/alertMessage";
 import moment from "moment";
 import { info } from "../info";
 
@@ -12,13 +12,13 @@ try {
   menu.startState({
     run: () => {
       menu.con(
-        "welcome to pennyfi. Select option:" +
+        "welcome to maisha. Select option:" +
           "\n1. Register" +
           "\n2. Due Date Reminder" +
           "\n3. Check Up Reminder" +
           "\n4. Nutritional Information" +
           "\n5. Fetal Development Information" +
-          "\n6. Log Emergency Alert"
+          "\n6. Get My Info"
       );
       console.log(menu.val);
     },
@@ -28,7 +28,7 @@ try {
       "3": "Check Up Reminder",
       "4": "Nutritional Information",
       "5": "Fetal Development Information",
-      "6": "Log Emergency Alert",
+      "6": "Get My Info",
     },
   });
 
@@ -41,7 +41,7 @@ try {
       }
       let due_date = user?.estimated_delivery;
 
-      menu.end("Your estimated day of delivery is " + due_date);
+      return menu.end("Your estimated day of delivery is " + due_date);
     },
   });
   menu.state("Check Up Reminder", {
@@ -66,7 +66,9 @@ try {
         user.checkup_dates.length - 1
       );
       user.checkup_dates[checkupIndex];
-      menu.end("Your next checkup date is on " + checkup_dates[checkupIndex]);
+      return menu.end(
+        "Your next checkup date is on " + checkup_dates[checkupIndex]
+      );
     },
   });
   menu.state("Nutritional Information", {
@@ -89,9 +91,9 @@ try {
         );
         //give info in that position of the array
         let suitableInfo = info[checkupIndex].nutritional_info;
-        menu.end(suitableInfo);
+        return menu.end(suitableInfo);
       } else {
-        menu.end("User not registered. Please register");
+        return menu.end("User not registered. Please register");
       }
     },
   });
@@ -117,21 +119,22 @@ try {
         );
         //give info in that position of the array
         let suitableInfo = info[checkupIndex].fetal_development;
-        menu.end(suitableInfo);
+        return menu.end(suitableInfo);
       } else {
-        menu.end("User not registered. Please register");
+        return menu.end("User not registered. Please register");
       }
-
-      menu.end("Fetus is here");
     },
   });
-  menu.state("Log Emergency Alert", {
+  menu.state("Get My Info", {
     run: async () => {
-      menu.con("Please provide details on your situation");
+      let user = await User.findOne(
+        { phoneNumber: menu.args.phoneNumber },
+        { passwprd: 0, _id: 0 }
+      );
+      return menu.end(JSON.stringify(user));
     },
-    defaultNext: "Record Emergency Details",
   });
-
+  /* 
   menu.state("Record Emergency Details", {
     run: async () => {
       let msg = menu.args.text;
@@ -139,27 +142,27 @@ try {
 
       if (user) {
         user.alert_messages.push(msg);
-        menu.end(
+        return menu.end(
           "Your alert has been received and is being attended to! A doctor will soon get in touch with you!"
         );
       } else {
         //create log of messages from unregistered users
-        let alert = Alert.create({
+        let alert = AlertUnreg.create({
           phoneNumber: menu.args.phoneNumber,
           msg: menu.args.text,
         });
-        menu.end(
+        return menu.end(
           "Your alert has been received and is being attended to! A doctor will soon get in touch with you!"
         );
       }
     },
-  });
+  }); */
 
   menu.state("Register", {
     run: async () => {
       menu.con("Enter full name");
       if (await User.exists({ phoneNumber: phoneNumber })) {
-        menu.end("Phone Number is already registered to service");
+        return menu.end("Phone Number is already registered to service");
       }
     },
     defaultNext: "EnterIdNumber",
@@ -211,13 +214,13 @@ try {
 
       console.log(user);
 
-      menu.end("Success!");
+      return menu.end("Success!");
     },
   });
 
   menu.state("end", {
     run: () => {
-      menu.end("Success!");
+      return menu.end("Success!");
     },
   });
 } catch (err) {
