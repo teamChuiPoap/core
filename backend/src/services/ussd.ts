@@ -1,208 +1,228 @@
 import UssdMenu from "ussd-builder";
 import { User } from "../models/User";
-import { Wallet } from "../models/Wallet";
-import { createWallet, getBalance} from "./polkdot-services.js";
-import { Chama } from "../models/Chama";
+import { AlertUnreg } from "../models/alertMessage";
+import moment from "moment";
+import { info } from "../info";
 
-export const menu = new UssdMenu
+export const menu = new UssdMenu();
 
-let name: string,
-    id_number: string,
-    PIN: string,
-    phoneNumber: string
+let name: string, id_number: string, PIN: string, phoneNumber: string;
 
-try{
-menu.startState({
-    run: ()=>{
-        menu.con('welcome to pennyfi. Select option:' + 
-            '\n1. Register' +
-            '\n2. Join Chama' +
-            '\n3. Create Chama'+
-            '\n4. View Chama Balances'
-)
-        console.log(menu.val)
+try {
+  menu.startState({
+    run: () => {
+      menu.con(
+        "welcome to maisha. Select option:" +
+          "\n1. Register" +
+          "\n2. Due Date Reminder" +
+          "\n3. Check Up Reminder" +
+          "\n4. Nutritional Information" +
+          "\n5. Fetal Development Information" +
+          "\n6. Get My Info"
+      );
+      console.log(menu.val);
     },
-        next:{
-            "1":"Register",
-            "2":"Join Chama",
-            "3":"Create Chama",
-            "4":"View Chama Balances"
-        }
-    })
+    next: {
+      "1": "Register",
+      "2": "Due Date Reminder",
+      "3": "Check Up Reminder",
+      "4": "Nutritional Information",
+      "5": "Fetal Development Information",
+      "6": "Get My Info",
+    },
+  });
 
-    menu.state('View Chama Balances',{
-        run: async ()=>{
-            let userPhoneNo = menu.args.phoneNumber
+  menu.state("Due Date Reminder", {
+    run: async () => {
+      //fetch due date from db
+      let user = await User.findOne({ phoneNumber: menu.args.phoneNumber });
+      if (!user) {
+        return menu.end("Please register to the service");
+      }
+      let due_date = user?.estimated_delivery;
 
-            let user = await User.findOne({phoneNumber: userPhoneNo}).select('chamas_joined')
+      return menu.end("Your estimated day of delivery is " + due_date);
+    },
+  });
+  menu.state("Check Up Reminder", {
+    run: async () => {
+      //fetch due date from db
+      let user = await User.findOne({ phoneNumber: menu.args.phoneNumber });
 
-            let chamasArray: any = user?.chamas_joined
+      if (!user) {
+        return menu.end("User is not registered. Please register");
+      }
+      let checkup_dates = user?.checkup_dates;
+      //calculate the month we're in now from conception
+      //give date in that position of the array
+      // Determine the closest checkup date index
+      // Assuming checkup dates are calculated at conception and stored in order
+      const monthsSinceConception = moment().diff(
+        moment(user?.date_of_conception),
+        "months"
+      );
+      let checkupIndex = Math.min(
+        Math.max(0, Math.floor(monthsSinceConception)),
+        user.checkup_dates.length - 1
+      );
+      user.checkup_dates[checkupIndex];
+      return menu.end(
+        "Your next checkup date is on " + checkup_dates[checkupIndex]
+      );
+    },
+  });
+  menu.state("Nutritional Information", {
+    run: async () => {
+      //fetch due date from db
+      let user = await User.findOne({ phoneNumber: menu.args.phoneNumber });
 
-            console.log(user?.chamas_joined)
+      if (user) {
+        //calculate the month we're in now from conception
+        // Calculate months since conception
+        const monthsSinceConception = moment().diff(
+          moment(user?.date_of_conception),
+          "months"
+        );
+        // Determine the closest checkup date index
+        // Assuming checkup dates are calculated at conception and stored in order
+        let checkupIndex = Math.min(
+          Math.max(0, Math.floor(monthsSinceConception)),
+          user.checkup_dates.length - 1
+        );
+        //give info in that position of the array
+        let suitableInfo = info[checkupIndex].nutritional_info;
+        return menu.end(suitableInfo);
+      } else {
+        return menu.end("User not registered. Please register");
+      }
+    },
+  });
+  menu.state("Fetal Development Information", {
+    run: async () => {
+      //fetch due date from db
+      let user = await User.findOne({ phoneNumber: menu.args.phoneNumber });
 
-            let res = 'Enter name of chama from below list:'
-           // user?.chamas_joined.forEach(element => res + `\n${element}`)
+      //calculate the month we're in now from conception
+      //give info in that position of the array
+      if (user) {
+        //calculate the month we're in now from conception
+        // Calculate months since conception
+        const monthsSinceConception = moment().diff(
+          moment(user?.date_of_conception),
+          "months"
+        );
+        // Determine the closest checkup date index
+        // Assuming checkup dates are calculated at conception and stored in order
+        let checkupIndex = Math.min(
+          Math.max(0, Math.floor(monthsSinceConception)),
+          user.checkup_dates.length - 1
+        );
+        //give info in that position of the array
+        let suitableInfo = info[checkupIndex].fetal_development;
+        return menu.end(suitableInfo);
+      } else {
+        return menu.end("User not registered. Please register");
+      }
+    },
+  });
+  menu.state("Get My Info", {
+    run: async () => {
+      let user = await User.findOne(
+        { phoneNumber: menu.args.phoneNumber },
+        { passwprd: 0, _id: 0 }
+      );
+      return menu.end(JSON.stringify(user));
+    },
+  });
+  /* 
+  menu.state("Record Emergency Details", {
+    run: async () => {
+      let msg = menu.args.text;
+      let user = await User.findOne({ phoneNumber: menu.args.phoneNumber });
 
-            for(let i=0; i<chamasArray.length; i++){
-                res+=`\n${chamasArray[i]}`
-            }
-            menu.con(res)
+      if (user) {
+        user.alert_messages.push(msg);
+        return menu.end(
+          "Your alert has been received and is being attended to! A doctor will soon get in touch with you!"
+        );
+      } else {
+        //create log of messages from unregistered users
+        let alert = AlertUnreg.create({
+          phoneNumber: menu.args.phoneNumber,
+          msg: menu.args.text,
+        });
+        return menu.end(
+          "Your alert has been received and is being attended to! A doctor will soon get in touch with you!"
+        );
+      }
+    },
+  }); */
 
-        },
-        defaultNext: 'View Selected Chama Balance'
-    })
+  menu.state("Register", {
+    run: async () => {
+      menu.con("Enter full name");
+      if (await User.exists({ phoneNumber: phoneNumber })) {
+        return menu.end("Phone Number is already registered to service");
+      }
+    },
+    defaultNext: "EnterIdNumber",
+  });
 
-    menu.state('View Selected Chama Balance',{
-        run: async ()=>{
-            let chamaName = menu.val
+  menu.state("EnterIdNumber", {
+    run: () => {
+      menu.con("Enter id number");
+      name = menu.val;
+    },
+    defaultNext: "EnterDateofConception",
+  });
 
-            let chama = await Chama.findOne({name:chamaName}).select('wallet_id'),
-                wallet_id = chama?.wallet_id
-            
-            let wallet = await Wallet.findOne({_id:wallet_id}).select('address'),
-                wallet_address = JSON.stringify(wallet?.address).replace(/[^a-zA-Z0-9 ]/g, '')
+  menu.state("EnterDateofConception", {
+    run: async () => {
+      menu.con("Enter estimated Date of Conception in YYYY/MM/DD format");
+      id_number = menu.val;
+    },
+    defaultNext: "Registration Logic",
+  });
 
-                console.log('address for chama', wallet_address)
-            
-            let balance = await getBalance(wallet_address)
+  menu.state("Registration Logic", {
+    run: async () => {
+      let date_of_conception = menu.val;
+      date_of_conception = moment(date_of_conception, "YYYY/MM/DD")
+        .toDate()
+        .toDateString();
 
-            menu.end(`wallet balance is ${balance}`)
-            
+      //create checkup dates
+      // Calculate 9 checkup dates, one month apart
+      const checkupDates = [];
+      const conceptionMoment = moment(date_of_conception);
 
-        }
-    })
+      for (let i = 0; i < 10; i++) {
+        checkupDates.push(conceptionMoment.clone().add(i, "months").toDate());
+      }
+      console.log(checkupDates);
 
-    menu.state('Create Chama',{
-        run: ()=>{
-            menu.con('Enter chama name')
-        },
-        defaultNext: "CreateChamaLogic"
-    })
+      phoneNumber = menu.args.phoneNumber;
 
-    menu.state('CreateChamaLogic',{
-        run: async ()=>{
-            let name = menu.val,
-                chamaName = name
-            let userPhoneNo = menu.args.phoneNumber
+      let user: any = await User.create({
+        name,
+        id_number,
+        phoneNumber,
+        date_of_conception,
+        estimated_delivery: checkupDates[9],
+        checkup_dates: checkupDates,
+      });
 
-            let chama:any = await Chama.create({name})
+      console.log(user);
 
-            let _wallet = await createWallet(),
-                address = _wallet.address,
-                mnemonic = _wallet.mnemonic,
-                ownerID = chama._id
+      return menu.end("Success!");
+    },
+  });
 
-            let wallet = await Wallet.create({address,mnemonic,ownerID}),
-                walletId = wallet._id
-            
-            let chama_members = [menu.args.phoneNumber]
-
-            let user = await User.findOne({phoneNumber: userPhoneNo}).select('chamas_joined'),
-                user_chamas = user?.chamas_joined
-
-                console.log(user_chamas)
-
-                user_chamas?.push(chama.name)
-
-                console.log('user chamas after addition', user_chamas)
-
-            user = await User.findOneAndUpdate({phoneNumber:userPhoneNo}, {chamas_joined: user_chamas},{new: true})            
-
-            chama = await Chama.findOneAndUpdate({name: chamaName},{wallet_id:walletId, members:chama_members}, {new: true})
-
-            console.log('new chama', chama)
-
-            menu.end('Success!')
-
-        },
-    })
-
-    menu.state('Join Chama',{
-        run: ()=>{
-            menu.con('Enter Chama name')
-            
-        },
-        defaultNext:'JoinChamaLogic'
-    })
-
-    menu.state('JoinChamaLogic', {
-        run: async ()=>{
-            let chamaName = menu.val
-            let userPhoneNo = menu.args.phoneNumber
-
-            let chama = await Chama.findOne({name:chamaName}).select('members')
-
-            let user = await User.findOne({phoneNumber: userPhoneNo}).select('_id chamas_joined')
-
-            let userId = JSON.stringify(user?._id) 
-
-            chama?.members.push(userId)
-
-            let user_chamas = user?.chamas_joined.push(chamaName)
-
-            user = await User.findOneAndUpdate({phoneNumber:userPhoneNo}, {chamas_joined: user_chamas}) 
-            
-            menu.end('Success!')
-        },
-    })
-
-    menu.state('Register', {
-        run: ()=>{
-            menu.con('Enter full name')            
-        },
-        defaultNext: "EnterIdNumber"
-    })
-
-    menu.state("EnterIdNumber",{
-        run: ()=>{
-            menu.con('Enter id number')
-            name = menu.val
-        }
-    ,
-    defaultNext: "EnterPIN"
-    })
-
-    menu.state("EnterPIN", {
-        run: async ()=>{
-            menu.con('Enter preferred PIN')
-            id_number = menu.val}
-            ,
-            defaultNext:"Registration Logic"})
-            
-    menu.state("Registration Logic",{
-        run: async ()=>{
-            PIN = menu.val
-
-            phoneNumber = menu.args.phoneNumber
-
-            let chamas_joined = ['']
-
-            let user:any = await User.create({name,id_number,phoneNumber,PIN,chamas_joined })
-
-            let _wallet = await createWallet(),
-                address = _wallet.address,
-                mnemonic = _wallet.mnemonic,
-                ownerID = user._id
-
-            let wallet = await Wallet.create({address,mnemonic,ownerID})
-
-            user = await User.findOneAndUpdate({name:name},{wallet_id: wallet._id},{new: true})
-
-            console.log(user)
-            
-            menu.end('Success!')
-        },
-        
-        }
-    )
-    
-
-    menu.state("end",{
-        run: ()=>{
-            menu.end('Success!')
-        }
-    })
+  menu.state("end", {
+    run: () => {
+      return menu.end("Success!");
+    },
+  });
+} catch (err) {
+  console.log(err);
 }
-catch(err){
-    console.log(err)
-}    
